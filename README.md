@@ -1,3 +1,5 @@
+<img width="890" height="1143" alt="image" src="https://github.com/user-attachments/assets/adbe068e-a52d-4c99-b4e3-fd72774eda7c" />
+
 # CYBER-ATTACK-PREDICTION-MODEL-USING-ML
 In the current digital era, cyberattacks pose a significant threat to individuals, organizations, and critical infrastructures. Rapid detection and mitigation of such attacks are essential to ensure data integrity, system availability, and overall cybersecurity. This project presents a machine learning-based Cyber Attack Detection system that leverages historical network and system data to predict and classify cyber threats. The system can detect attack types such as DDoS, Port Scanning, Brute Force, Bot activities, Web attacks, and system infiltration, providing real-time alerts, risk assessment, and recommended actions.
 
