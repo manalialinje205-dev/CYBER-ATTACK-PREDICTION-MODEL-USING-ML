@@ -1,0 +1,383 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CyberAttack |Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --glass: rgba(10, 14, 23, 0.9);
+            --border: rgba(0, 242, 255, 0.15);
+            --accent: #00f2ff;
+            --danger: #ff4d4d;
+            --success: #00ff88;
+            --warning: #facc15;
+            --modal-bg: #0a0e17;
+        }
+
+        body, html {
+            height: 100vh; margin: 0;
+            background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), 
+                        url('/static/predictor.jpg') center/cover no-repeat fixed;
+            background-color: var(--bg-dark);
+            color: #e6edf3; font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        .navbar {
+            background: rgba(10, 14, 23, 0.7);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-link { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .nav-link:hover { color: var(--accent) !important; }
+        .nav-link.active { color: var(--accent) !important; border-bottom: 2px solid var(--accent); }
+
+/* Buttons */
+    .btn-signout {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger-red);
+      color: var(--danger-red);
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn-signout:hover {
+      background: var(--danger-red);
+      color: white;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    }
+        .dashboard-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            grid-template-rows: auto 1fr;
+            gap: 15px; padding: 15px; flex: 1; min-height: 0;
+        }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 12px; padding: 15px;
+            display: flex; flex-direction: column;
+        }
+
+        .metrics-grid { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .metric-card { 
+            cursor: pointer; transition: 0.3s; 
+            border-left: 4px solid var(--accent);
+        }
+        .metric-card:hover { transform: translateY(-3px); background: rgba(0, 242, 255, 0.1); }
+        .stat-val { font-family: 'JetBrains Mono'; font-weight: 800; font-size: 1.6rem; margin: 0; }
+
+        .search-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 15px;
+            color: white; font-size: 0.8rem; width: 250px;
+        }
+
+        .log-section { min-height: 0; }
+        .table-wrap { flex: 1; overflow-y: auto; margin-top: 10px; }
+        .table { color: #8b949e; cursor: pointer; }
+        .table thead th { position: sticky; top: 0; background: #0b111a; z-index: 5; font-size: 0.75rem; text-transform: uppercase; }
+
+        .sidebar-graphs { display: flex; flex-direction: column; gap: 15px; min-height: 0; }
+        .chart-container { flex: 1; min-height: 0; }
+
+        .status-pill { padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; border: 1px solid; text-transform: uppercase; }
+        
+        /* Modal Styling */
+        .modal-content { background: var(--modal-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; padding: 10px; }
+        .modal-header { border: none; padding-bottom: 0; }
+        .modal-title { font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .modal-body { padding-top: 20px; }
+        
+        .intel-label { color: #566573; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .intel-ip { color: var(--accent); font-family: 'JetBrains Mono'; font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; }
+        
+        .threat-progress-container { width: 100%; height: 8px; background: #1c2533; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+        .threat-progress-bar { height: 100%; transition: width 0.6s ease; }
+        
+        .resolution-box { border-left: 2px solid var(--accent); padding-left: 15px; font-size: 0.9rem; color: #d1d5db; line-height: 1.5; margin-top: 15px; }
+
+        /* STRICT IP COLOR LOGIC */
+        .ip-cell { font-family: 'JetBrains Mono'; font-weight: 600; transition: color 0.2s; }
+        
+        /* Secured view: Force Green */
+        .secured-active .ip-cell { color: var(--success) !important; }
+        
+        /* Critical view: Force Red */
+        .critical-active .ip-cell { color: var(--danger) !important; }
+
+        /* All view: Default accent blue */
+        .all-active .ip-cell { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark px-3" style="background: rgba(10, 14, 23, 0.9); border-bottom: 1px solid rgba(0, 242, 255, 0.1);">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/" style="color: #b8860b; font-size: 1.2rem;">
+            CyberAttack Detection
+        </a>
+        <button class="navbar-toggler border-1" type="button" data-bs-toggle="collapse" data-bs-target="#navContent" style="border-color: rgba(255,255,255,0.1); padding: 4px 8px;">
+            <span class="navbar-toggler-icon" style="width: 1.2em; height: 1.2em;"></span>
+        </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/detection">Detection</a></li>
+                <li class="nav-item"><a class="nav-link" href="/upload">Upload Dataset</a></li>
+                <li class="nav-item"><a class="nav-link active"="/dashboard">Dashboard</a></li>
+                <li class="nav-item mt-2 mt-lg-0">
+            <button type="button" class="btn-signout" data-bs-toggle="modal" data-bs-target="#signOutModal">
+              <i class="fa-solid fa-right-from-bracket me-2"></i>Sign Out
+            </button>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="dashboard-wrapper">
+    <div class="metrics-grid">
+        <div class="glass-panel metric-card" onclick="filterTable('ALL')">
+            <div><p class="small text-uppercase mb-1 opacity-50">Global Traffic</p><h3 id="m-total" class="stat-val">0</h3></div>
+            <i class="fas fa-globe-americas fa-2x opacity-25"></i>
+        </div>
+        <div class="glass-panel metric-card" style="border-left-color: var(--danger);" onclick="explainMetric('CRITICAL')">
+            <div><p class="small text-uppercase mb-1 text-danger">Critical Threats</p><h3 id="m-risk" class="stat-val text-danger">0</h3></div>
+            <i class="fas fa-radiation fa-2x opacity-25"></i>
+        </div>
+        <div class="glass-panel metric-card" style="border-left-color: var(--success);" onclick="explainMetric('SECURED')">
+            <div><p class="small text-uppercase mb-1 text-success">Secured Events</p><h3 id="m-mitigated" class="stat-val text-success">0</h3></div>
+            <i class="fas fa-lock fa-2x opacity-25"></i>
+        </div>
+    </div>
+
+    <div class="glass-panel log-section">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0 fw-bold small"><i class="fas fa-terminal me-2 text-info"></i>LIVE INTELLIGENCE STREAM</h6>
+            <span id="current-filter" class="badge bg-secondary opacity-50">VIEW: ALL</span>
+        </div>
+        <div class="table-wrap">
+            <div class="ms-auto me-3 d-none d-md-block">
+            <div class="position-relative">
+                <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 opacity-50" style="font-size: 0.8rem; color: #888;"></i>
+                <input type="text" id="mainSearch" class="search-box ps-4" placeholder="Search..." onkeyup="filterTableBySearch()" 
+                       style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: white; font-size: 0.8rem; width: 200px; padding: 4px 10px;">
+            </div>
+        </div>  
+            <table class="table table-dark table-hover small border-0">
+                <thead>
+                    <tr class="text-info">
+                        <th>TIMESTAMP</th>
+                        <th>SOURCE NODE</th>
+                        <th>ATTACK VECTOR</th>
+                        <th>RISK LEVEL</th>
+                    </tr>
+                </thead>
+                <tbody id="logTable" class="all-active"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="sidebar-graphs">
+        <div class="glass-panel chart-container">
+            <h6 class="small fw-bold mb-3 text-uppercase opacity-75">Vector Frequency</h6>
+            <canvas id="barChart"></canvas>
+        </div>
+        <div class="glass-panel chart-container">
+            <h6 class="small fw-bold mb-3 text-uppercase opacity-75">Threat Distribution</h6>
+            <canvas id="pieChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="infoModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mTitle"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+</div>
+
+  <div class="modal fade" id="signOutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow-lg">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Secure Termination</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center py-4">
+          <i class="fa-solid fa-circle-exclamation text-warning mb-3" style="font-size: 3rem;"></i>
+          <h4 class="fw-bold">Confirm Sign Out?</h4>
+          <p class="text-secondary">Are you sure you want to end your current session? You will be redirected to the login portal.</p>
+        </div>
+        <div class="modal-footer justify-content-center pb-4">
+          <button type="button" class="btn btn-outline-secondary px-4 me-2" data-bs-dismiss="modal">Cancel</button>
+          <a href="/logout" class="btn btn-danger px-4 fw-bold">Sign Out Now</a>
+        </div>
+      </div>
+    </div>
+  </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const attackData = {
+        "DDoS": { color: "#ff4d4d", risk: 98, solve: "Edge-rate limiting engaged. Scrubbing traffic via Cloud-Shield." },
+        "PortScan": { color: "#3b82f6", risk: 72, solve: "IP Shunning active. Unusual port probing signature isolated." },
+        "BruteForce": { color: "#f97316", risk: 75, solve: "MFA challenge triggered. Source IP restricted from auth-gate." },
+        "WebAttack": { color: "#facc15", risk: 85, solve: "SQLi pattern blocked by WAF. Payload sanitized successfully." },
+        "Infiltration": { color: "#a855f7", risk: 92, solve: "Unauthorized shell attempt blocked. Integrity check passed." },
+        "Bot": { color: "#6366f1", risk: 40, solve: "Automated scraper identified. CAPTCHA verification required." },
+        "Normal": { color: "#00ff88", risk: 12, solve: "Legitimate handshake. User verified via OAuth token." }
+    };
+
+    let total = 0, criticalCount = 0, securedCount = 0;
+    const types = Object.keys(attackData);
+    const counts = Array(types.length).fill(0);
+    const modalObj = new bootstrap.Modal(document.getElementById('infoModal'));
+
+    const barChart = new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: { labels: types, datasets: [{ data: counts, backgroundColor: Object.values(attackData).map(a => a.color) }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: '#8b949e', font: { size: 10 } } } } }
+    });
+
+    const pieChart = new Chart(document.getElementById('pieChart'), {
+        type: 'doughnut',
+        data: { labels: types, datasets: [{ data: counts, backgroundColor: Object.values(attackData).map(a => a.color) }] },
+        options: { maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } }
+    });
+
+    function explainMetric(type) {
+        const body = document.getElementById('modalBody');
+        const title = document.getElementById('mTitle');
+        
+        if(type === 'CRITICAL') {
+            title.innerHTML = '<i class="fas fa-radiation text-danger"></i> HIGH-RISK THREAT INTEL';
+            body.innerHTML = `
+                <div class="intel-label">Status</div>
+                <div class="intel-ip text-danger">ACTIVE CRITICAL THREATS</div>
+                <div class="threat-progress-container"><div class="threat-progress-bar" style="width: 100%; background: var(--danger);"></div></div>
+                <div class="resolution-box">Showing ONLY threats with risk level > 70%. Normal system traffic is excluded for maximum response focus. All IPs shown here are Red.</div>`;
+            modalObj.show();
+            setTimeout(() => filterTable('CRITICAL'), 500);
+        } else if(type === 'SECURED') {
+            title.innerHTML = '<i class="fas fa-lock text-success"></i> PROTECTION VERIFIED';
+            body.innerHTML = `
+                <div class="intel-label">Status</div>
+                <div class="intel-ip text-success">MITIGATED / SAFE NODES</div>
+                <div class="threat-progress-container"><div class="threat-progress-bar" style="width: 100%; background: var(--success);"></div></div>
+                <div class="resolution-box">Showing ONLY secured or verified traffic (Risk ≤ 70%). This confirms successful neutralization. All IPs shown here are Green.</div>`;
+            modalObj.show();
+            setTimeout(() => filterTable('SECURED'), 500);
+        }
+    }
+
+    function addRow() {
+        const type = types[Math.floor(Math.random() * types.length)];
+        const info = attackData[type];
+        const time = new Date().toLocaleTimeString();
+        const ip = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+
+        total++;
+        if(info.risk > 70 && type !== 'Normal') criticalCount++;
+        else securedCount++;
+
+        document.getElementById('m-total').innerText = total;
+        document.getElementById('m-risk').innerText = criticalCount;
+        document.getElementById('m-mitigated').innerText = securedCount;
+
+        const tbody = document.getElementById('logTable');
+        const row = document.createElement('tr');
+        row.dataset.riskValue = info.risk;
+        row.dataset.type = type;
+        
+        row.innerHTML = `
+            <td class="opacity-50 font-monospace" style="font-size: 0.75rem;">${time}</td>
+            <td class="ip-cell">${ip}</td>
+            <td><span class="status-pill" style="border-color:${info.color}; color:${info.color}">${type}</span></td>
+            <td class="fw-bold" style="color:${info.color}">${info.risk}%</td>
+        `;
+
+        row.onclick = () => {
+            const mBody = document.getElementById('modalBody');
+            document.getElementById('mTitle').innerHTML = `<i class="fas fa-fingerprint"></i> Node Intelligence`;
+            mBody.innerHTML = `
+                <div class="intel-label">Origin Node</div>
+                <div class="intel-ip">${ip}</div>
+                <div class="intel-label">Analysis Result (${type})</div>
+                <div class="threat-progress-container">
+                    <div class="threat-progress-bar" style="width: ${info.risk}%; background: ${info.color};"></div>
+                </div>
+                <div class="resolution-box">${info.solve}</div>
+            `;
+            modalObj.show();
+        };
+
+        tbody.prepend(row);
+        if(tbody.children.length > 20) tbody.lastElementChild.remove();
+
+        counts[types.indexOf(type)]++;
+        barChart.update();
+        pieChart.update();
+    }
+
+    function filterTable(mode) {
+        const rows = document.querySelectorAll('#logTable tr');
+        const tbody = document.getElementById('logTable');
+        const badge = document.getElementById('current-filter');
+        
+        badge.innerText = `VIEW: ${mode}`;
+        tbody.classList.remove('all-active', 'critical-active', 'secured-active');
+        
+        if(mode === 'ALL') tbody.classList.add('all-active');
+        if(mode === 'CRITICAL') tbody.classList.add('critical-active');
+        if(mode === 'SECURED') tbody.classList.add('secured-active');
+
+        rows.forEach(row => {
+            const risk = parseInt(row.dataset.riskValue);
+            const type = row.dataset.type;
+
+            if(mode === 'ALL') {
+                row.style.display = "";
+            } 
+            else if(mode === 'CRITICAL') {
+                row.style.display = (risk > 70 && type !== 'Normal') ? "" : "none";
+            } 
+            else if(mode === 'SECURED') {
+                row.style.display = (risk <= 70) ? "" : "none";
+            }
+        });
+    }
+
+    function filterTableBySearch() {
+        const val = document.getElementById('mainSearch').value.toLowerCase();
+        const rows = document.querySelectorAll('#logTable tr');
+        rows.forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(val) ? "" : "none";
+        });
+    }
+
+    setInterval(addRow, 3000);
+    for(let i=0; i<10; i++) addRow();
+</script>
+</body>
+</html>

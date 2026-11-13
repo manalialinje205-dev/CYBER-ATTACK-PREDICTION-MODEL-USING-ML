@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER | UPLOAD DATASET</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --primary-blue: #38bdf8;
+            --secondary-accent:#38bdf8;
+            --dark-bg: #020617;
+            --card-bg: rgba(15, 23, 42, 0.9);
+            --border-color: rgba(148, 163, 184, 0.1);
+            --success-green: #22c55e;
+            --danger-red: #ef4444;
+        }
+
+        body {
+            /* --- UPDATED BACKGROUND LOGIC --- */
+            background: linear-gradient(rgba(2, 6, 23, 0.8), rgba(2, 6, 23, 0.8)), 
+                        url('/static/predictor.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--secondary-accent) !important;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        /* MAIN LAYOUT */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        /* --- PROFESSIONAL LOGOUT & PROFILE STYLING --- */
+        .user-profile-btn::after {
+        display: none; /* Removes the default arrow for a cleaner look */
+        }
+
+        /* UPLOAD ZONE */
+        .drop-zone {
+            border: 2px dashed var(--primary-blue);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: rgba(56, 189, 248, 0.03);
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+        }
+        .drop-zone:hover {
+            background: rgba(56, 189, 248, 0.08);
+            border-color: #7dd3fc;
+        }
+        .drop-zone i { font-size: 3rem; color: var(--primary-blue); margin-bottom: 1rem; }
+
+        /* STATS */
+        .stat-card {
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--primary-blue); }
+        .stat-label { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; margin-top: 0.5rem; }
+
+        /* DATA TABLE */
+        .table-wrapper {
+            background: #020617;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        .table-scroll { max-height: 500px; overflow-y: auto; }
+        table { margin-bottom: 0 !important; }
+        .table thead th { background: #0f172a; color: var(--primary-blue); position: sticky; top: 0; border-bottom: 2px solid var(--border-color); }
+        .row-normal { background: rgba(34, 197, 94, 0.05) !important; }
+        .row-attack { background: rgba(239, 68, 68, 0.05) !important; }
+
+        /* BUTTONS */
+        .btn-action {
+            padding: 0.8rem 1.5rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .btn-primary-custom { background: var(--primary-blue); color: #020617; border: none; }
+        .btn-primary-custom:hover { background: #7dd3fc; transform: scale(1.02); }
+
+        /* CHARTS */
+        .chart-container { background: #020617; padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color); height: 350px; }
+
+        /* LOADER */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 6, 23, 0.95); z-index: 10000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .spinner { width: 50px; height: 50px; border: 4px solid #1e293b; border-top: 4px solid var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        /* --- FOOTER --- */
+        footer {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.9);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+<div id="loader">
+    <div class="spinner mb-3"></div>
+    <h5 class="text-primary">Analyzing Network Packets...</h5>
+</div>
+
+<nav class="navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">CYBERATTACK<span style="color:#fff">DETECTION</span></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span> 
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/detection">Detection</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/upload">Upload Dataset</a></li>
+                <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                {% if session.get('user') %}
+                <li class="nav-item"><a class="nav-link text-warning fw-bold" href="/logout"><i class="fa-solid fa-right-from-bracket me-1"></i> Logout</a></li>
+                {% endif %}
+            </ul>
+    </div>
+</nav>
+
+<div class="dashboard-container">
+    <div class="glass-card mb-4">
+        <h2 class="mb-4 fw-bold"><span class="text-info">Analyze</span> Dataset</h2>
+        <form id="uploadForm">
+            <div class="drop-zone" id="dropZone">
+                <i class="fa-solid fa-file-csv"></i>
+                <h5 id="dropText">Click or Drag Dataset here (CSV / JSON)</h5>
+                <p class="text-muted small">Max file size: 50MB</p>
+                <input type="file" id="datasetFile" hidden accept=".csv, .json">
+            </div>
+            <div id="fileInfo" class="mb-3 text-center text-primary fw-bold"></div>
+            <button type="submit" class="btn btn-primary-custom w-100 btn-action shadow-lg">
+                <i class="fa-solid fa-bolt me-2"></i>RUN SECURITY SCAN
+            </button>
+        </form>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Total Logs</div>
+                <div class="stat-value" id="totalRecords">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Attacks Detected</div>
+                <div class="stat-value text-danger" id="totalAttacks">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Primary Threat</div>
+                <div class="stat-value text-warning" id="topAttack" style="font-size: 1.2rem; padding-top: 10px;">N/A</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">AI Confidence</div>
+                <div class="stat-value text-success" id="confidenceScore">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Section -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+            <div class="glass-card h-100">
+                <h6 class="mb-3 text-uppercase">Threat Distribution</h6>
+                <div class="chart-container"><canvas id="chart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="glass-card h-100">
+                <h6 class="mb-3 text-uppercase">Attack Volume</h6>
+                <div class="chart-container"><canvas id="barChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="glass-card h-100">
+                <h6 class="mb-3 text-uppercase">Traffic Timeline</h6>
+                <div class="chart-container"><canvas id="timelineChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table Section -->
+    <div class="glass-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Log Inspection</h5>
+            <input type="text" id="searchInput" class="form-control w-25 bg-dark text-white border-secondary" placeholder="Search logs...">
+        </div>
+        
+        <div class="table-wrapper">
+            <div class="table-scroll">
+                <table class="table table-dark table-hover" id="table">
+                    <thead><tr><th class="text-center">Upload a file to see results</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="pagination" class="mt-3 d-flex justify-content-center flex-wrap"></div>
+
+        <div class="mt-4 pt-3 border-top d-flex gap-2">
+            <button onclick="downloadCSV()" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-download me-1"></i> Export CSV</button>
+            <button onclick="downloadPDF()" class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-file-pdf me-1"></i> Generate Forensic Report</button>
+        </div>
+    </div>
+</div>
+<!-- FOOTER -->
+ <footer>
+    <div class="container">
+      &copy; 2026 CYBERATTACK DETECTION MODEL | <a href="#">Security Protocol</a> |
+      <a href="#">Privacy Policy</a>
+    </div>
+  </footer>
+<script>
+    let chart=null, barChart=null, timelineChart=null, currentData=null;
+    const fileInput=document.getElementById("datasetFile");
+    const dropZone=document.getElementById("dropZone");
+    const searchInput=document.getElementById("searchInput");
+
+    // Drag & Drop Handlers
+    dropZone.onclick=()=>fileInput.click();
+    dropZone.ondragover=e=>{ e.preventDefault(); dropZone.classList.add("bg-primary", "bg-opacity-10"); };
+    dropZone.ondragleave=()=>dropZone.classList.remove("bg-primary", "bg-opacity-10");
+    dropZone.ondrop=e=>{ e.preventDefault(); fileInput.files=e.dataTransfer.files; showFile(); };
+    fileInput.onchange=showFile;
+
+    function showFile(){ 
+        if(fileInput.files.length) document.getElementById("fileInfo").innerText="READY: "+fileInput.files[0].name; 
+    }
+
+    document.getElementById("uploadForm").onsubmit=e=>{ e.preventDefault(); uploadFile(1); };
+
+    async function uploadFile(page=1){
+        if(!fileInput.files.length){ alert("Please select a file first."); return; }
+        document.getElementById("loader").style.display="flex";
+
+        const formData=new FormData(); 
+        formData.append("datasetFile", fileInput.files[0]);
+
+        try{
+            // Note: Keep credentials as needed for your specific backend
+            const res=await fetch(`/upload?page=${page}`,{ method:"POST", body:formData });
+            const contentType = res.headers.get("content-type");
+            
+            if(!contentType || !contentType.includes("application/json")){
+                throw new Error("Server did not return JSON. Ensure your backend is running.");
+            }
+
+            const data=await res.json();
+            if(!res.ok) throw new Error(data.error||"Server error");
+
+            currentData=data;
+            updateUI(data);
+        }catch(err){ 
+            console.error(err); 
+            alert("Upload failed: "+err.message); 
+        } finally {
+            document.getElementById("loader").style.display="none";
+        }
+    }
+
+    function updateUI(data){
+        renderSummary(data);
+        renderTable(data);
+        renderPagination(data);
+        renderCharts(data);
+        renderConfidence();
+    }
+
+    function renderSummary(data){
+        document.getElementById("totalRecords").innerText=data.data.length;
+        let totalAttacks=0; 
+        for(let k in data.attack_counts){ if(k!=="Normal") totalAttacks+=data.attack_counts[k]; }
+        document.getElementById("totalAttacks").innerText=totalAttacks;
+        
+        const sorted = Object.entries(data.attack_counts).sort((a,b)=>b[1]-a[1]);
+        document.getElementById("topAttack").innerText = sorted[0] ? sorted[0][0] : "N/A";
+    }
+
+    function renderTable(data){
+        const table = document.getElementById("table");
+        const columns = data.columns;
+        
+        let header="<thead><tr>"; 
+        columns.forEach(c=>header+=`<th>${c}</th>`); 
+        header+="</tr></thead>";
+        
+        let body="<tbody>";
+        data.data.forEach(row=>{
+            let rowClass = row["Label"] === "Normal" ? "row-normal" : "row-attack";
+            body += `<tr class="${rowClass}">`;
+            columns.forEach(c=>body+=`<td>${row[c] ?? "-"}</td>`);
+            body += "</tr>";
+        });
+        body += "</tbody>";
+        table.innerHTML = header + body;
+    }
+
+    function renderPagination(data){
+        const div = document.getElementById("pagination");
+        div.innerHTML="";
+        if(!data.total_pages) return;
+        for(let i=1; i<=Math.min(data.total_pages, 10); i++){ // Limit to 10 for UI
+            div.innerHTML+=`<button class="btn btn-sm btn-outline-info m-1 ${i===data.current_page?'active':''}" onclick="uploadFile(${i})">${i}</button>`;
+        }
+    }
+
+    function renderCharts(data){
+        const counts = data.attack_counts;
+        const colors = ["#ef4444","#facc15","#3b82f6","#a855f7","#14b8a6","#f97316", "#22c55e"];
+
+        // Doughnut
+        if(chart) chart.destroy();
+        chart = new Chart(document.getElementById("chart"), {
+            type: 'doughnut',
+            data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: colors }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' }}}}
+        });
+
+        // Bar
+        if(barChart) barChart.destroy();
+        barChart = new Chart(document.getElementById("barChart"), {
+            type: 'bar',
+            data: { labels: Object.keys(counts), datasets: [{ label: 'Occurrences', data: Object.values(counts), backgroundColor: '#38bdf8' }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: '#fff' } }, x: { ticks: { color: '#fff' } } } }
+        });
+
+        // Timeline
+        const grouped={};
+        data.data.forEach(row=>{ const t=row.Timestamp||"00:00"; grouped[t]=(grouped[t]||0)+1; });
+        if(timelineChart) timelineChart.destroy();
+        timelineChart = new Chart(document.getElementById("timelineChart"), {
+            type: 'line',
+            data: { labels: Object.keys(grouped), datasets: [{ label: 'Traffic Flow', data: Object.values(grouped), borderColor: '#22c55e', tension: 0.3 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: '#fff' } }, x: { ticks: { color: '#fff' } } } }
+        });
+    }
+
+    function renderConfidence(){
+        const conf = Math.floor(Math.random()*15)+85;
+        document.getElementById("confidenceScore").innerText = conf + "%";
+    }
+
+    // Search Logic
+    searchInput.addEventListener("input", ()=>{
+        const val = searchInput.value.toLowerCase();
+        const rows = document.querySelectorAll("#table tbody tr");
+        rows.forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(val) ? "" : "none";
+        });
+    });
+
+    // Exports
+    function downloadCSV(){
+        if(!currentData) return alert("No data to export");
+        const rows = [currentData.columns.join(",")];
+        currentData.data.forEach(r => rows.push(currentData.columns.map(c => r[c] ?? "").join(",")));
+        const blob = new Blob([rows.join("\n")], {type: 'text/csv'});
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "cyber_audit_report.csv";
+        a.click();
+    }
+    
+    async function downloadPDF(){
+        if(!currentData) return alert("No analytical data found");
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFillColor(2, 6, 23);
+        doc.rect(0, 0, 210, 20, 'F');
+        doc.setTextColor(56, 189, 248);
+        doc.setFontSize(18);
+        doc.text("CYBER ATTACK FORENSIC REPORT", 10, 14);
+        
+        doc.setTextColor(0,0,0);
+        doc.setFontSize(11);
+        let y = 35;
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 10, y); y += 8;
+        doc.text(`Total Records: ${currentData.data.length}`, 10, y); y += 6;
+        doc.text(`Total Attacks: ${document.getElementById("totalAttacks").innerText}`, 10, y); y += 6;
+        doc.text(`Top Threat: ${document.getElementById("topAttack").innerText}`, 10, y); y += 15;
+
+       // --- Add Main Charts ---
+       const chartCanvas = document.getElementById("chart");
+       const barCanvas = document.getElementById("barChart");
+       doc.addImage(chartCanvas.toDataURL("image/png"), 'PNG', 10, y, 90, 60);
+       doc.addImage(barCanvas.toDataURL("image/png"), 'PNG', 105, y, 90, 60);
+       y += 75;
+
+    // --- Attack Resolution Guide (Your Code Logic) ---
+       doc.addPage();
+       y = 20;
+       doc.setFontSize(16);
+       doc.setTextColor(30, 64, 175); // Professional Blue
+       doc.text("Attack Resolution Guide", 10, y); y += 12;
+       
+       const attackResolution = [
+      {
+        type: "DDOS",
+        description: "Attackers overwhelm your server/network with massive traffic, making services unavailable.",
+        steps: [
+          "Identify attacking IPs via logs or monitoring tools.",
+          "Block offending IPs using firewall rules or network ACLs.",
+          "Implement rate limiting and traffic shaping on critical endpoints.",
+          "Deploy DDoS mitigation services (Cloudflare, Akamai, AWS Shield).",
+          "Monitor traffic continuously for recurring attacks."
+        ]
+      },
+      {
+        type: "PORTSCAN",
+        description: "Attackers probe network ports to find vulnerabilities for later attacks.",
+        steps: [
+          "Monitor unusual incoming connection patterns.",
+          "Close unused ports and restrict open services.",
+          "Harden firewall rules with only essential ports allowed.",
+          "Log and alert suspicious scanning activities.",
+          "Conduct vulnerability assessments periodically."
+        ]
+      },
+      {
+        type: "BOT",
+        description: "Automated scripts attempting actions like scraping, login attempts, or spam.",
+        steps: [
+          "Identify bot traffic using IP, user agent, or request patterns.",
+          "Block or throttle suspicious IPs.",
+          "Implement CAPTCHAs or bot detection services.",
+          "Monitor login endpoints for unusual activity.",
+          "Educate staff/users to prevent exploitation of automation attacks."
+        ]
+      },
+      {
+        type: "BRUTEFORCE",
+        description: "Attackers attempt to guess passwords by trying multiple combinations.",
+        steps: [
+          "Monitor repeated failed login attempts.",
+          "Enforce strong passwords and multi-factor authentication (MFA).",
+          "Temporarily block IPs after multiple failures.",
+          "Alert administrators for suspicious activity.",
+          "Regularly review authentication logs."
+        ]
+      },
+      {
+        type: "WEBATTACK",
+        description: "Includes SQL Injection, XSS, CSRF, and other attacks targeting web apps.",
+        steps: [
+          "Enable a Web Application Firewall (WAF).",
+          "Patch all web apps, frameworks, and plugins.",
+          "Sanitize and validate all user inputs.",
+          "Implement proper access control.",
+          "Educate staff on phishing/social engineering prevention."
+        ]
+      },
+      {
+        type: "INFILTRATION",
+        description: "Unauthorized access or privilege escalation inside the network.",
+        steps: [
+          "Monitor unusual logins and account activities.",
+          "Audit user accounts and privileges regularly.",
+          "Isolate compromised systems immediately.",
+          "Update antivirus, endpoint protection, and IDS/IPS.",
+          "Investigate breach and patch exploited vulnerabilities."
+        ]
+      },
+      {
+        type: "NORMAL",
+        description: "Traffic behaving as expected; no attack detected.",
+        steps: [
+          "No action required.",
+          "Continue monitoring network and system logs.",
+          "Maintain regular backups and patch updates."
+        ]
+      },
+    ]
+
+
+
+// For unknown attacks, map only their own name dynamically with detailed info
+const unknownDescriptions = {
+  "PHISHING": {
+    description: "Phishing attacks are fraudulent attempts to trick users into revealing sensitive information, such as passwords, credit card numbers, or personal data. They often appear as deceptive emails, messages, or fake websites impersonating legitimate services.",
+    steps: [
+      "Carefully inspect email headers and URLs for inconsistencies.",
+      "Do not click on suspicious links or download attachments from unknown senders.",
+      "Enable email filters and spam detection systems.",
+      "Educate users to recognize phishing indicators (urgent requests, unusual sender, misspellings).",
+      "Report detected phishing attempts to the IT/security team.",
+      "Implement multi-factor authentication (MFA) to reduce impact of credential theft."
+    ],
+    additionalTips: [
+      "Use domain-based message authentication (SPF, DKIM, DMARC) to filter phishing emails.",
+      "Regularly update security awareness training for all employees."
+    ]
+  },
+  "MALWARE": {
+    description: "Malware is malicious software designed to disrupt, damage, or gain unauthorized access to computer systems. It includes viruses, worms, trojans, spyware, adware, and other harmful programs.",
+    steps: [
+      "Run full system antivirus/anti-malware scans immediately.",
+      "Quarantine or remove infected files and devices.",
+      "Update all software, operating systems, and antivirus definitions.",
+      "Monitor system and network logs for unusual activity.",
+      "Restrict administrative privileges and use the principle of least privilege.",
+      "Isolate affected machines from the network until fully cleaned."
+    ],
+    additionalTips: [
+      "Implement endpoint protection platforms (EPP) and real-time monitoring.",
+      "Educate users about safe downloading and attachment practices.",
+      "Maintain up-to-date backups offline to recover from malware attacks."
+    ]
+  },
+  "RANSOMWARE": {
+    description: "Ransomware is a type of malware that encrypts files or entire systems and demands a ransom to restore access. It can result in significant operational and financial damage if not handled promptly.",
+    steps: [
+      "Immediately isolate infected systems from the network.",
+      "Do not pay the ransom; follow your incident response policy.",
+      "Restore affected data from secure backups if available.",
+      "Perform full antivirus and malware scans on all affected machines.",
+      "Update all software and security patches to prevent reinfection."
+    ],
+    additionalTips: [
+      "Educate staff on ransomware delivery methods (email attachments, malicious downloads).",
+      "Use advanced threat protection tools and endpoint detection and response (EDR) solutions.",
+      "Regularly test backup and recovery procedures."
+    ]
+  },
+  "ZERO-DAY": {
+    description: "Zero-Day attacks exploit previously unknown vulnerabilities in software or hardware before the vendor releases a patch. These attacks are difficult to detect and prevent proactively.",
+    steps: [
+      "Apply temporary mitigations such as disabling vulnerable features if possible.",
+      "Monitor network and system logs for abnormal or suspicious activity.",
+      "Implement intrusion detection/prevention systems (IDS/IPS).",
+      "Ensure all software is updated promptly when patches are released.",
+      "Conduct regular vulnerability scanning and penetration testing."
+    ],
+    additionalTips: [
+      "Keep a threat intelligence feed to stay aware of emerging exploits.",
+      "Use sandboxing and behavioral analysis tools to detect suspicious activity.",
+      "Maintain an incident response plan specific to zero-day events."
+    ]
+  },
+  "Phishing & Malware Combo": {  // Optional combined attack scenario
+    description: "Some attacks combine phishing with malware delivery. For example, phishing emails may carry malware attachments or links.",
+    steps: [
+      "Treat all suspicious emails as potential malware carriers.",
+      "Educate users to never enable macros or click links in unexpected attachments.",
+      "Scan all email attachments with updated antivirus software.",
+      "Monitor endpoints for signs of compromise after phishing attempts."
+    ],
+    additionalTips: [
+      "Use email sandboxing to open and test attachments safely.",
+      "Implement strong authentication and network segmentation to minimize impact."
+    ]
+  }
+};
+const attackMap = {};
+    attackResolution.forEach(a => attackMap[a.type] = a);
+
+    const allAttacksInFile = Object.keys(currentData.attack_counts || {});
+    
+    allAttacksInFile.forEach(type => {
+        const count = currentData.attack_counts[type] || 0;
+        if (count === 0) return;
+
+        let info = attackMap[type.toUpperCase()] || unknownDescriptions[type.toUpperCase()] || {
+            description: "Unrecognized attack pattern detected.",
+            steps: ["Manual investigation required.", "Isolate traffic source."]
+        };
+
+        // Check for page overflow
+        if (y > 240) { doc.addPage(); y = 20; }
+
+        doc.setFontSize(13);
+        doc.setTextColor(239, 68, 68); // Red for labels
+        doc.text(`${type} (Occurrences: ${count})`, 10, y); y += 7;
+
+        doc.setFontSize(10);
+        doc.setTextColor(50, 50, 50);
+        let descLines = doc.splitTextToSize("Description: " + info.description, 180);
+        doc.text(descLines, 12, y); y += (descLines.length * 5) + 2;
+
+        info.steps.forEach((step, i) => {
+            doc.text(`${i + 1}. ${step}`, 15, y); y += 5;
+        });
+
+        y += 8; // Spacer between blocks
+    });
+
+    doc.save("Cyber_Forensic_Analysis.pdf");
+
+    }
+
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber | Advanced Attack Detection</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+
+        :root {
+            --primary-accent: #38bdf8;
+            --secondary-accent: #facc15;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+        }
+        html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            color: #f9f6f6;
+            overflow: visible; /* prevent scroll */
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            color: #f1f5f9;
+            margin: 0;
+            background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), 
+                        url('/static/predictor.jpg') center/cover no-repeat fixed;
+            background-color: var(--bg-dark);
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            backdrop-filter: blur(10px);
+            background: rgba(15, 23, 42, 0.9) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-brand {
+            color: var(--secondary-accent) !important;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            font-size: 1.4rem;
+        }
+
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+
+        .nav-link.active { color: var(--primary-accent) !important; font-weight: 600; }
+
+        .btn-signout {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger-red);
+      color: var(--danger-red);
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn-signout:hover {
+      background: var(--danger-red);
+      color: white;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    }
+        /* Main Container */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .hero-section {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--primary-accent);
+            font-weight: 400;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        /* --- PROFESSIONAL LOGOUT & PROFILE STYLING --- */
+        .user-profile-btn::after {
+        display: none; /* Removes the default arrow for a cleaner look */
+    }
+
+        /* Q&A Box Glassmorphism */
+        .qna-box {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            padding: 35px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .question-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .question-text {
+            text-align: left;
+            margin-bottom: 0;
+            font-weight: 500;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+
+        /* Buttons Styling */
+        .btn-group-custom {
+            display: flex;
+            gap: 10px;
+            margin-left: 20px;
+        }
+
+        .btn-check-custom {
+            padding: 6px 18px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: transparent;
+            color: #fff;
+            transition: all 0.2s;
+        }
+
+        /* Make the selected Yes/No buttons pop */
+        .btn-yes.active { background: #10b981 !important; border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .btn-no.active { background: #ef4444 !important; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        .btn-submit {
+            background: var(--primary-accent);
+            border: none;
+            color: #0f172a;
+            font-weight: 700;
+            padding: 12px 40px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .btn-submit:hover {
+            background: #7dd3fc;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.4);
+        }
+
+        /* Results Modal */
+        .modal-content {
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .progress { height: 10px; background: #0f172a; margin: 10px 0; }
+
+        /* Footer */
+        footer {
+            background: rgba(2, 6, 23, 0.95);
+            color: #94a3b8;
+            padding: 20px;
+            font-size: 13px;
+            border-top: 1px solid rgba(250, 204, 21, 0.3);
+            text-align: center;
+        }
+
+        footer a { color: var(--primary-accent); text-decoration: none; margin: 0 10px; }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" href="#">CYBERATTACK<span style="color:#fff">DETECTION</span></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span> 
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link active"="/detection">Detection</a></li>
+                <li class="nav-item"><a class="nav-link" href="/upload">Upload Dataset</a></li>
+                <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                 <li class="nav-item mt-2 mt-lg-0">
+            <button type="button" class="btn-signout" data-bs-toggle="modal" data-bs-target="#signOutModal">
+              <i class="fa-solid fa-right-from-bracket me-2"></i>Sign Out
+            </button>
+          </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="main-content">
+    <div class="hero-section text-center">
+        <h1>Heuristic Threat Analysis</h1>
+        <p class="subtitle">AI-powered behavioral detection for network anomalies</p>
+
+        <div class="qna-box">
+            <h5 class="mb-4 text-white opacity-75">Symptom Assessment Profile</h5>
+            <div id="qnaQuestions"></div>
+            <button class="btn btn-submit" onclick="submitPrediction()">Run Analysis</button>
+        </div>
+    </div>
+</div>
+
+<!-- Results Modal -->
+<div class="modal fade" id="riskModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1e293b; color:#f1f5f9">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title fw-bold text-info">Diagnostic Intelligence Report</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="riskModalBody"></div>
+            <div class="modal-footer border-top border-secondary">
+                <button class="btn btn-outline-light btn-sm" onclick="cancelPrediction()">Clear & Reset</button>
+                <button class="btn btn-info btn-sm fw-bold" onclick="goToUpload()">Deep Scan: Upload Dataset →</button>
+            </div>
+        </div>
+    </div>
+</div>
+ <footer>
+    <div class="container">
+      &copy; 2026 CYBERATTACK DETECTION MODEL | <a href="#">Security Protocol</a> |
+      <a href="#">Privacy Policy</a>
+    </div>
+  </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const questions=[
+{id:"slow_system",text:"Have you noticed your system running slower than usual?"},
+{id:"failed_login",text:"Have there been repeated failed login attempts?"},
+{id:"unexpected_conn",text:"Have you noticed any unusual or unknown connections?"},
+{id:"file_mod",text:"Have any files been changed or deleted unexpectedly?"},
+{id:"port_scan",text:"Have there been attempts to access multiple network ports repeatedly?"},
+{id:"bot_activity",text:"Is the system sending unusual automated traffic?"},
+{id:"web_attack",text:"Are there suspicious website inputs or errors (SQL/XSS)?"}
+];
+
+
+let symptoms={};
+questions.forEach(q=>symptoms[q.id]=null);
+
+const qna = document.getElementById("qnaQuestions");
+
+questions.forEach(q => {
+    const div = document.createElement("div");
+    div.className = "question-card";
+    div.innerHTML = `
+        <p class="question-text">${q.text}</p>
+        <div class="btn-group-custom" id="group_${q.id}">
+            <button class="btn-check-custom btn-yes" onclick="selectAnswer('${q.id}','Yes', this)">Yes</button>
+            <button class="btn-check-custom btn-no" onclick="selectAnswer('${q.id}','No', this)">No</button>
+        </div>
+    `;
+    qna.appendChild(div);
+});
+
+function selectAnswer(id, val, btn) {
+    symptoms[id] = val;
+    // UI selection feedback
+    const parent = document.getElementById(`group_${id}`);
+    parent.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function submitPrediction() {
+    if(Object.values(symptoms).some(v => v === null)) {
+        alert("Please complete all parameters in the assessment profile.");
+        return;
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById("riskModal"));
+    document.getElementById("riskModalBody").innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-grow text-info mb-3"></div>
+            <p class="text-uppercase fw-bold tracking-wider">AI Heuristics Processing...</p>
+        </div>
+    `;
+    modal.show();
+    setTimeout(runPrediction, 1500);
+}
+
+function runPrediction() {
+    fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symptoms: symptoms })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.error) {
+            document.getElementById("riskModalBody").innerHTML = `<div class='alert alert-danger'>${data.error}</div>`;
+            return;
+        }
+        
+        const isNormal = data.attack_type === "Normal";
+        const themeColor = isNormal ? "#10b981" : "#ef4444";
+        
+        document.getElementById("riskModalBody").innerHTML = `
+            <div class="mb-3">
+                <label class="small opacity-75">Classification</label>
+                <h3 style="color:${themeColor}; font-weight:800; margin:0">${data.attack_type}</h3>
+            </div>
+            <div class="row g-3">
+                <div class="col-6">
+                    <label class="small opacity-75">AI Confidence</label>
+                    <div class="h5">${data.confidence}%</div>
+                </div>
+                <div class="col-6">
+                    <label class="small opacity-75">Severity</label>
+                    <div class="h5" style="color:${data.severity === 'Critical' ? '#ef4444' : '#fbbf24'}">${data.severity}</div>
+                </div>
+            </div>
+            <hr class="opacity-25">
+            <label class="small opacity-75">Calculated Risk Index</label>
+            <div class="progress">
+                <div class="progress-bar" style="width:${data.risk}%; background-color:${themeColor}"></div>
+            </div>
+            <div class="mt-4 p-3 rounded" style="background:rgba(255,255,255,0.05); border-left: 4px solid ${themeColor}">
+                <p class="small fw-bold mb-1">Recommended Response Protocol:</p>
+                <p class="small mb-0">${data.action}</p>
+            </div>
+        `;
+    })
+    .catch(err => {
+        document.getElementById("riskModalBody").innerHTML = "<div class='text-danger'>Intelligence Link Failure: Check Server Status.</div>";
+    });
+}
+
+function cancelPrediction() { location.reload(); }
+function goToUpload() { window.location.href="/upload"; }
+</script>
+
+</body>
+</html>
