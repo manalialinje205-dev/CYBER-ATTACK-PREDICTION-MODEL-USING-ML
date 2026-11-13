@@ -5,4 +5,4 @@ The model utilizes supervised learning techniques, including Logistic Regression
 
 By combining multiple machine learning algorithms with cybersecurity practices, this system automates threat detection, reduces response time, and supports informed decision-making for network administrators. It demonstrates the effectiveness of AI in proactively safeguarding digital environments and mitigating evolving cyber threats.
 
-<img width="890" height="100" alt="image" src="https://github.com/user-attachments/assets/adbe068e-a52d-4c99-b4e3-fd72774eda7c" />
+<img width="890" height="500" alt="image" align="center" src="https://github.com/user-attachments/assets/adbe068e-a52d-4c99-b4e3-fd72774eda7c" />
