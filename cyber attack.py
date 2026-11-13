@@ -23,14 +23,12 @@ from sklearn.metrics import (
 )
 from imblearn.over_sampling import SMOTE
 
-# -------------------------------
-# 1️⃣ Create models folder
-# -------------------------------
+
+# 1. Create models folder
 os.makedirs("models", exist_ok=True)
 
-# -------------------------------
-# 2️⃣ Load CICIDS dataset files
-# -------------------------------
+
+# 2. Load CICIDS dataset files
 csv_files = [
     "Friday-WorkingHours-Morning.pcap_ISCX.csv",
     "Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
@@ -55,9 +53,8 @@ data = pd.concat(data_list, ignore_index=True)
 print("Combined dataset shape:", data.shape)
 print("Unique labels in dataset:", data["Label"].unique())
 
-# -------------------------------
-# 3️⃣ Clean labels
-# -------------------------------
+
+# 3. Clean labels
 # Robust label cleaning
 def clean_label(label):
     if not isinstance(label, str):
@@ -74,7 +71,7 @@ def clean_label(label):
 
 data["Label"] = data["Label"].apply(clean_label)
 
-# Map to unified attack classes
+# 4. Map to unified attack classes
 label_map = {
     "benign": "Normal",
     "bot": "Bot",
@@ -96,16 +93,13 @@ data = data.dropna(subset=["Label"])
 print("Labels after mapping:", data["Label"].unique())
 
 
-# -------------------------------
-# 5️⃣ Encode labels
-# -------------------------------
+# 5. Encode labels
 le = LabelEncoder()
 data['Label'] = le.fit_transform(data['Label'])
 print("All attack classes:", le.classes_)
 
-# -------------------------------
-# 6️⃣ Prepare features & target
-# -------------------------------
+
+# 6. Prepare features & target
 # Define the columns that are non-numeric or metadata
 cols_to_drop = ['Flow ID', 'Source IP', 'Destination IP', 'Timestamp', 'Label', 'Binary_Label']
 
@@ -114,16 +108,14 @@ X = data.drop(columns=[c for c in cols_to_drop if c in data.columns])
 y = data["Label"]
 
 print(f"Features used for training: {X.columns.tolist()[:5]}... (Total: {len(X.columns)})")
-# -------------------------------
-# 7️⃣ Train-test split
-# -------------------------------
+
+# 7️. Train-test split
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# -------------------------------
-# 8️⃣ Scaling & handle NaNs
-# -------------------------------
+
+# 8️. Scaling & handle NaNs
 X_train = X_train.replace([np.inf, -np.inf], np.nan).fillna(0)
 X_test = X_test.replace([np.inf, -np.inf], np.nan).fillna(0)
 
@@ -131,15 +123,13 @@ scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-# -------------------------------
-# 9️⃣ Handle class imbalance
-# -------------------------------
+
+# 9️. Handle class imbalance
 sm = SMOTE(random_state=42)
 X_train, y_train = sm.fit_resample(X_train, y_train)
 
-# -------------------------------
-# 🔟 Train only Random Forest (fast & stable)
-# -------------------------------
+
+# 10. Train only Random Forest (fast & stable)
 best_model = RandomForestClassifier(
     n_estimators=50,   # faster than 150
     max_depth=20,      #  limits tree size
@@ -154,9 +144,8 @@ best_score = best_model.score(X_test, y_test)
 best_name = "Random Forest"
 print(f"\n Training completed! Best Model: {best_name} with Accuracy: {best_score:.4f}")
 
-# -------------------------------
-# 1️⃣1️⃣ Confusion Matrix
-# -------------------------------
+
+# 1️0.1  Confusion Matrix
 all_classes = le.classes_
 cm = confusion_matrix(y_test, best_model.predict(X_test), labels=np.arange(len(all_classes)))
 
@@ -168,9 +157,8 @@ plt.xlabel("Predicted")
 plt.ylabel("Actual")
 plt.show()
 
-# -------------------------------
-# 1️⃣2️⃣ Classification Report & Metrics
-# -------------------------------
+
+# 1️0.2️ Classification Report & Metrics
 y_pred = best_model.predict(X_test)
 print(classification_report(y_test, y_pred, target_names=all_classes))
 
@@ -189,9 +177,8 @@ plt.ylim(0,1)
 plt.title("Overall Performance Metrics")
 plt.show()
 
-# -------------------------------
-# 1️⃣3️⃣ ROC Curve per class
-# -------------------------------
+
+# 1️0.3️ ROC Curve per class
 y_test_bin = label_binarize(y_test, classes=np.arange(len(all_classes)))
 y_score = best_model.predict_proba(X_test)
 
@@ -210,9 +197,8 @@ plt.legend(loc="lower right")
 plt.grid(True)
 plt.show()
 
-# -------------------------------
-# 1️⃣4️⃣ Precision-Recall Curve per class
-# -------------------------------
+
+# 1️0.4️ Precision-Recall Curve per class
 plt.figure(figsize=(10,8))
 for i, color in zip(range(len(all_classes)), colors):
     precision_vals, recall_vals, _ = precision_recall_curve(y_test_bin[:, i], y_score[:, i])
@@ -227,9 +213,8 @@ plt.legend(loc="lower left")
 plt.grid(True)
 plt.show()
 
-# -------------------------------
-# 1️⃣5️⃣ Feature Importance (Random Forest only)
-# -------------------------------
+
+# 1️0.5️ Feature Importance (Random Forest only)
 importances = best_model.feature_importances_
 features = X.columns
 feat_imp = pd.Series(importances, index=features)
@@ -241,9 +226,8 @@ plt.xlabel("Importance Score")
 plt.show()
 
 
-# -------------------------------
-# 1️⃣6️⃣ Save model, scaler, label encoder
-# -------------------------------
+
+# 1️0.6️ Save model, scaler, label encoder
 
 with open("models/best_model.pkl", "wb") as f:
     pickle.dump(best_model, f)
@@ -257,9 +241,9 @@ with open("models/label_encoder.pkl", "wb") as f:
 
 print("\n Model training complete. Files saved in 'models/' folder.")
 
-#deployment 
+<------------------------DEPLOYMENT------------------------------->
 
-# ------------------- Routes -------------------
+# Routes 
 from flask import Flask, render_template, request, jsonify,session, redirect
 import os
 import pandas as pd
@@ -269,11 +253,11 @@ import sqlite3
 import datetime
 import joblib
 
-# ------------------- Flask App -------------------
+#  Flask App 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
 
-# ------------------- Config -------------------
+#  Config 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB
@@ -306,7 +290,7 @@ except Exception as e:
 
     
   
-# ------------------- Database -------------------
+#  Database 
 def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
@@ -336,12 +320,12 @@ with get_db_connection() as conn:
     """)
     conn.commit()
 
-# ---------------- Utility ----------------
+#  Utility 
 def is_logged_in():
     return "user" in session
 
 
-# ------------------- register -------------------
+#  register 
 
 
 from flask import render_template, request, redirect, session, jsonify
@@ -396,7 +380,7 @@ def register():
         return jsonify({"success": False, "message": "Internal system error during provisioning."}), 500
 
 
-# ---------------- Login ----------------
+#  Login 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if "user" in session:
@@ -421,13 +405,13 @@ def login():
     else:
         return jsonify({"success": False, "message": "Invalid username or password"})
     
-# ---------------- Logout ----------------
+#  Logout 
 @app.route("/logout")
 def logout():
     session.pop("user", None)
     return redirect("/login")
 
-# ------------------- Routes -------------------
+#  -----------------Routes ---------------------
 def is_logged_in():
     return "user" in session
 
@@ -459,9 +443,8 @@ def allowed_file(filename):
 # ------------------- Upload Route -------------------
 from flask import Flask, request, jsonify, redirect, render_template, send_file
 import math
-# -------------------------------
+
 # Upload Route (GET + POST)
-# -------------------------------
 
 UPLOAD_FOLDER = "uploads"
 
@@ -557,10 +540,7 @@ def download_report():
     return jsonify({"error": "No report available"}), 404
 
 # ------------------- Prediction -------------------
-
-# =========================
 # Solutions Mapping (YOUR TEXT)
-# =========================
 solutions = {
     "DDoS": "Block suspicious IP addresses and enable rate limiting to mitigate attack.",
     "PortScan": "Update firewall rules and continuously monitor network ports.",
@@ -571,9 +551,8 @@ solutions = {
     "Normal": "No immediate action required. Continue monitoring system activity."
 }
 
-# =========================
+
 # Predict API
-# =========================
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
@@ -582,9 +561,8 @@ def predict():
         user = data.get("user", "Anonymous")
         ip = request.remote_addr
 
-        # =========================
+        
         # Convert Yes/No → 1/0
-        # =========================
         slow = 1 if symptoms.get("slow_system") == "Yes" else 0
         failed = 1 if symptoms.get("failed_login") == "Yes" else 0
         conn = 1 if symptoms.get("unexpected_conn") == "Yes" else 0
@@ -593,9 +571,8 @@ def predict():
         bot_activity = 1 if symptoms.get("bot_activity") == "Yes" else 0
         web_attack = 1 if symptoms.get("web_attack") == "Yes" else 0
 
-        # =========================
+        
         # Weighted Score
-        # =========================
         score = (
             slow * 2 +
             failed * 3 +
@@ -604,9 +581,7 @@ def predict():
             port * 3
         )
 
-        # =========================
         # Attack Logic
-        # =========================
         if score >= 8:
             attack_type = "DDoS"
             confidence = 0.95
@@ -637,14 +612,11 @@ def predict():
             confidence = 0.60
         
 
-        # =========================
         # Risk Score
-        # =========================
         risk_score = int(confidence * 100)
 
-        # =========================
+
         # Severity Levels
-        #  =========================
         if risk_score >= 80:
             severity = "Critical"
         elif risk_score >= 60:
@@ -655,9 +627,8 @@ def predict():
         # USE YOUR CUSTOM SOLUTION TEXT
         action = solutions.get(attack_type, "No action available")
 
-        # =========================
+
         # Save to DB
-        # =========================
         with get_db_connection() as conn_db:
             conn_db.execute(
                 "INSERT INTO predictions (timestamp, user, ip, attack_type, confidence, risk) VALUES (?, ?, ?, ?, ?, ?)",
@@ -672,15 +643,14 @@ def predict():
             )
             conn_db.commit()
 
-        # =========================
+ 
         # Response
-        # =========================
         return jsonify({
             "attack_type": attack_type,
             "confidence": round(confidence * 100, 2),
             "risk": risk_score,
             "severity": severity,
-            "action": action   # 👈 THIS now matches your frontend text
+            "action": action   
         })
 
     except Exception as e:
